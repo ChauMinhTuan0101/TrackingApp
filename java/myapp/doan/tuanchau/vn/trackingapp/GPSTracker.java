@@ -237,10 +237,6 @@ public class GPSTracker extends Service implements LocationListener {
             Geocoder geocoder = new Geocoder(context, Locale.ENGLISH);
 
             try {
-                /**
-                 * Geocoder.getFromLocation - Returns an array of Addresses
-                 * that are known to describe the area immediately surrounding the given latitude and longitude.
-                 */
                 List<Address> addresses = geocoder.getFromLocation(latitude, longitude, this.geocoderMaxResults);
 
                 return addresses;
