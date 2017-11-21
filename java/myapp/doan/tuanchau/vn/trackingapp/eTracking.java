@@ -12,13 +12,18 @@ public class eTracking {
     String lng;
     String name;
 
-    public eTracking(String name, String imei, String date, String lat, String lng) {
+    public eTracking(String name, String imei, String date) {
         this.imei = imei;
         this.date = date;
-        this.lat = lat;
-        this.lng = lng;
         this.name = name;
     }
+//    public eTracking(String name, String imei, String date, String lat, String lng) {
+//        this.imei = imei;
+//        this.date = date;
+//        this.lat = lat;
+//        this.lng = lng;
+//        this.name = name;
+//    }
 
     public eTracking() {
     }
@@ -47,19 +52,19 @@ public class eTracking {
         this.date = date;
     }
 
-    public String getLat() {
-        return lat;
-    }
-
-    public void setLat(String lat) {
-        this.lat = lat;
-    }
-
-    public String getLng() {
-        return lng;
-    }
-
-    public void setLng(String lng) {
-        this.lng = lng;
-    }
+//    public String getLat() {
+//        return lat;
+//    }
+//
+//    public void setLat(String lat) {
+//        this.lat = lat;
+//    }
+//
+//    public String getLng() {
+//        return lng;
+//    }
+//
+//    public void setLng(String lng) {
+//        this.lng = lng;
+//    }
 }
