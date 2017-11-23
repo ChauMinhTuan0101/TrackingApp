@@ -9,6 +9,8 @@ import android.widget.ListAdapter;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
+import com.firebase.ui.auth.AuthUI;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,6 +34,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity {
     ArrayList<eTracking> trackingList;
+    private final static int LOGIN_PERMISSION = 1000;
     ProgressDialog pDialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         trackingList  = new ArrayList<>();
        // new GetTracking().execute();
-
-        new SendPostRequest().execute();
+        startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAllowNewEmailAccounts(true).build(),LOGIN_PERMISSION);
+        new AddCar().execute();
     }
     private class HttpRequestTask extends AsyncTask<Void,Void, eTracking> {
 
@@ -67,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-    private class SendPostRequest extends AsyncTask<String, Void, String> {
+    private class AddCar extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... strings) {
@@ -76,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject postData = new JSONObject();
                 postData.put("IMEI", "4");
                 Log.e("params", postData.toString());
-
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(15000 /* milliseconds */);
                 conn.setConnectTimeout(15000 /* milliseconds */);
@@ -129,6 +131,71 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+    private class AddTracking extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                URL url = new URL("http://trackingcar.us-west-2.elasticbeanstalk.com/api/AddTracking");
+                JSONObject postData = new JSONObject();
+                postData.put("IMEI", "");
+                postData.put("CreatedDate","");
+                postData.put("Latitude","");
+                postData.put("Longitude","");
+                Log.e("params", postData.toString());
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(15000 /* milliseconds */);
+                conn.setConnectTimeout(15000 /* milliseconds */);
+                conn.setRequestMethod("POST");
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
+                OutputStream os = conn.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(getPostDataString(postData));
+
+                writer.flush();
+                writer.close();
+                os.close();
+
+                int responseCode=conn.getResponseCode();
+
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+
+                    BufferedReader in=new BufferedReader(
+                            new InputStreamReader(
+                                    conn.getInputStream()));
+                    StringBuffer sb = new StringBuffer("");
+                    String line="";
+
+                    while((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+
+                    in.close();
+                    return sb.toString();
+
+                }
+                else {
+                    return new String("false : "+responseCode);
+                }
+            }
+            catch(Exception e){
+                return new String("Exception: " + e.getMessage());
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(getApplicationContext(), result,
+                    Toast.LENGTH_LONG).show();
+        }
+
+    }
+
     public String getPostDataString(JSONObject params) throws Exception {
 
         StringBuilder result = new StringBuilder();
@@ -154,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
         return result.toString();
     }
 
-    private class GetTracking extends AsyncTask<Void, Void, Void >{
+    private class GetAllCar extends AsyncTask<Void, Void, Void >{
 
         @Override
         protected Void doInBackground(Void... voids) {
@@ -241,4 +308,5 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
 }

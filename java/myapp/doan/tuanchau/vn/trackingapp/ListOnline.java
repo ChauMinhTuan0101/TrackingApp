@@ -2,10 +2,13 @@ package myapp.doan.tuanchau.vn.trackingapp;
 
 import android.*;
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 //import android.location.LocationListener;
+import android.os.AsyncTask;
+import android.os.Handler;
 import android.service.carrier.CarrierService;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,6 +18,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -36,6 +40,22 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
+
+import javax.net.ssl.HttpsURLConnection;
+
 public class ListOnline extends AppCompatActivity implements  GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,LocationListener{
 
     DatabaseReference onlineRef, currentUserRef, counterRef,locations;
@@ -43,23 +63,29 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
 
     RecyclerView listOnline;
     RecyclerView.LayoutManager layoutManager;
-
+    GPSTracker gpsTracker;
     private static final int MY_PERMISSION_REQUEST_CODE = 7171;
     private static final int PLAY_SERVICES_RES_REQUEST = 7172;
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
+    Handler handler;
+    Runnable m_handlerTask;
     private static int UPDATE_INTERVAL = 5000;
     private static int FASTEST_INTERVAL = 3000;
     private static int DISTANCE =10;
+    String lat,lng;
+    String IMEI="";
 
-
+    Date currentTime = Calendar.getInstance().getTime();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_online);
-
+        gpsTracker = new GPSTracker(this);
+        lat = String.valueOf(gpsTracker.getLatitude());
+        lng = String.valueOf(gpsTracker.getLongitude());
         listOnline = findViewById(R.id.listOnline);
         listOnline.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
@@ -95,6 +121,26 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
         }
         setupSystem();
         updateList();
+        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        IMEI = telephonyManager.getDeviceId().toString();
+
+        handler = new Handler();
+        m_handlerTask = new Runnable() {
+            @Override
+            public void run() {
+
+                Log.d("Handler", "is running");
+                gpsTracker = new GPSTracker(getApplicationContext()); // Service Class GPSTracker
+                gpsTracker.updateGPSCoordinates();
+
+                new AddTracking().execute();
+                Log.d("TAG", "Posted");
+                handler.postDelayed(m_handlerTask, (3000));
+            }
+        };
+        handler.postDelayed(m_handlerTask, (3000));
+
+
 
 
     }
@@ -338,5 +384,155 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+    private class AddCar extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                URL url = new URL("http://trackingcar.us-west-2.elasticbeanstalk.com/api/addCar");
+                JSONObject postData = new JSONObject();
+                postData.put("IMEI", "4");
+                Log.e("params", postData.toString());
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(15000 /* milliseconds */);
+                conn.setConnectTimeout(15000 /* milliseconds */);
+                conn.setRequestMethod("POST");
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
+                OutputStream os = conn.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(getPostDataString(postData));
+
+                writer.flush();
+                writer.close();
+                os.close();
+
+                int responseCode=conn.getResponseCode();
+
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+
+                    BufferedReader in=new BufferedReader(
+                            new InputStreamReader(
+                                    conn.getInputStream()));
+                    StringBuffer sb = new StringBuffer("");
+                    String line="";
+
+                    while((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+
+                    in.close();
+                    return sb.toString();
+
+                }
+                else {
+                    return new String("false : "+responseCode);
+                }
+            }
+            catch(Exception e){
+                return new String("Exception: " + e.getMessage());
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(getApplicationContext(), result,
+                    Toast.LENGTH_LONG).show();
+        }
+
+    }
+    private class AddTracking extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                URL url = new URL("http://trackingcar.us-west-2.elasticbeanstalk.com/api/AddTracking");
+                JSONObject postData = new JSONObject();
+                postData.put("IMEI", IMEI);
+                postData.put("CreatedDate",currentTime);
+                postData.put("Latitude",lat);
+                postData.put("Longitude",lng);
+                Log.e("params", postData.toString());
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(15000 /* milliseconds */);
+                conn.setConnectTimeout(15000 /* milliseconds */);
+                conn.setRequestMethod("POST");
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
+                OutputStream os = conn.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(getPostDataString(postData));
+
+                writer.flush();
+                writer.close();
+                os.close();
+
+                int responseCode=conn.getResponseCode();
+
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
+
+                    BufferedReader in=new BufferedReader(
+                            new InputStreamReader(
+                                    conn.getInputStream()));
+                    StringBuffer sb = new StringBuffer("");
+                    String line="";
+
+                    while((line = in.readLine()) != null) {
+
+                        sb.append(line);
+                        break;
+                    }
+
+                    in.close();
+                    return sb.toString();
+
+                }
+                else {
+                    return new String("false : "+responseCode);
+                }
+            }
+            catch(Exception e){
+                return new String("Exception: " + e.getMessage());
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(getApplicationContext(), result,
+                    Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    public String getPostDataString(JSONObject params) throws Exception {
+
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+
+        Iterator<String> itr = params.keys();
+
+        while(itr.hasNext()){
+
+            String key= itr.next();
+            Object value = params.get(key);
+
+            if (first)
+                first = false;
+            else
+                result.append("&");
+
+            result.append(URLEncoder.encode(key, "UTF-8"));
+            result.append("=");
+            result.append(URLEncoder.encode(value.toString(), "UTF-8"));
+
+        }
+        return result.toString();
     }
 }
