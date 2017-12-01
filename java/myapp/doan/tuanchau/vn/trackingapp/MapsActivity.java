@@ -13,6 +13,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.StrictMode;
+import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -81,7 +82,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DatabaseReference locations;
     MapTracking tracking;
     private String email;
+    private String phone;
     Double lat,lng;
+    //Query user_location = locations.orderByChild("phonenumber").equalTo(email);
+
     private int mInterval = 5000; // 5 seconds by default, can be changed later
     private Handler mHandler;
     private static final String TAG = "TAG";
@@ -118,16 +122,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         locations  = FirebaseDatabase.getInstance().getReference("Locations");
 
+        if(getIntent() != null) {
+            phone = getIntent().getStringExtra("phonenum");
+            email = getIntent().getStringExtra("email");
+            lat = getIntent().getDoubleExtra("lat", 0);
+            lng = getIntent().getDoubleExtra("lng", 0);
+            Toast.makeText(this, phone + lat.toString() + lng.toString(), Toast.LENGTH_SHORT).show();
+//            if(phone == "none" && email != "none")
+//            {
+//                loadLocationForThisUser(email);
+//            }
+//            else if(phone != "none" && email == "none"){
 
+                loadLocationForThisUser(phone);
 
-        if(getIntent() != null)
-        {
-            email =getIntent().getStringExtra("email");
-            lat = getIntent().getDoubleExtra("lat",0);
-            lng = getIntent().getDoubleExtra("lng",0);
-            Toast.makeText(this, email + lat.toString() + lng.toString(), Toast.LENGTH_SHORT).show();
-            loadLocationForThisUser(email);
-
+        //}
         }
 
         new AddTracking().execute();
@@ -183,8 +192,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30 * 1000, 0,);
     }
 
-    private void loadLocationForThisUser(String email) {
-        Query user_location = locations.orderByChild("email").equalTo(email);
+
+    private void loadLocationForThisUser(String phonenum) {
+        Query user_location = locations.orderByChild("phonenumber").equalTo(email);
         user_location.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -197,14 +207,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Location to  =new Location("");
                     to.setLatitude(lat);
                     to.setLongitude(lng);
-
-
                     Location friend = new Location("");
                     friend.setLatitude(Double.parseDouble(tracking.getLat()));
                     friend.setLongitude(Double.parseDouble(tracking.getLng()));
                     distance(to,friend);
 
-                    mMap.addMarker(new MarkerOptions().position(friendLocation).title(tracking.getEmail())
+                    mMap.addMarker(new MarkerOptions().position(friendLocation).title(tracking.getPhonenumber())
                             .snippet("Distance" + new DecimalFormat("#.#").format(distance(to,friend)))
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(friendLocation,12.0f));
@@ -212,11 +220,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 }
                 //tracking.getLat() + tracking.getLng()
-                Toast.makeText(MapsActivity.this, tracking.getEmail() , Toast.LENGTH_SHORT).show();
+//                Toast.makeText(MapsActivity.this, tracking.getPhonenumber() , Toast.LENGTH_SHORT).show();
 
                 LatLng current = new LatLng(lat,lng);
                 mMap.addMarker(new MarkerOptions().position(current)
-                                .title(FirebaseAuth.getInstance().getCurrentUser().getEmail()));
+                        .title(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()));
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng),12.0f));
 
                 new AddTracking().execute();
@@ -307,8 +315,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         @Override
         protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result,
-                    Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(), result,
+//                    Toast.LENGTH_LONG).show();
         }
 
     }
@@ -373,8 +381,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         @Override
         protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result,
-                    Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(), result,
+//                    Toast.LENGTH_LONG).show();
         }
 
     }

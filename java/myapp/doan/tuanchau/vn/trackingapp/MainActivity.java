@@ -1,15 +1,31 @@
 package myapp.doan.tuanchau.vn.trackingapp;
 
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.StrictMode;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.IdpResponse;
+import com.firebase.ui.auth.ResultCodes;
+import com.google.android.gms.identity.intents.AddressConstants;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,6 +43,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -35,15 +52,133 @@ import javax.net.ssl.HttpsURLConnection;
 public class MainActivity extends AppCompatActivity {
     ArrayList<eTracking> trackingList;
     private final static int LOGIN_PERMISSION = 1000;
+    private static final int RC_SIGN_IN = 123;
+
+    Button btnPhone, btnEmail;
     ProgressDialog pDialog;
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (android.os.Build.VERSION.SDK_INT >= 23 && context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        String[] PERMISSIONS = {android.Manifest.permission.READ_CONTACTS, android.Manifest.permission.CAMERA,
+                android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.READ_PHONE_STATE};
+        if (!hasPermissions(this, PERMISSIONS)) {
+            int PERMISSIONS_ALL =1 ;
+            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSIONS_ALL);
+        }
+        if (android.os.Build.VERSION.SDK_INT > 9) {
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
+        }
+        //btnEmail = findViewById(R.id.loginEmail);
+        btnPhone = findViewById(R.id.loginPhone);
         trackingList  = new ArrayList<>();
        // new GetTracking().execute();
-        startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAllowNewEmailAccounts(true).build(),LOGIN_PERMISSION);
-        new AddCar().execute();
+//        btnEmail.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAllowNewEmailAccounts(true).build(),LOGIN_PERMISSION);
+//
+//            }
+//        });
+        //startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAllowNewEmailAccounts(true).build(),LOGIN_PERMISSION);
+       btnPhone.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View view) {
+               FirebaseAuth auth = FirebaseAuth.getInstance();
+//               if (auth.getCurrentUser() != null ) {
+////                   Intent intent = new Intent(MainActivity.this,ListOnline.class);
+////                   startActivity(intent);
+////                   finish();
+//               } else {
+                   startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(Arrays.asList(
+                           new AuthUI.IdpConfig.Builder(AuthUI.PHONE_VERIFICATION_PROVIDER).build())).build(), RC_SIGN_IN);
+               //}
+           }
+       });
+
+        //new AddCar().execute();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == LOGIN_PERMISSION)
+        {
+            startNewActivity(resultCode,data);
+        }
+        if(requestCode == RC_SIGN_IN)
+        {
+            IdpResponse response = IdpResponse.fromResultIntent(data);
+            if(resultCode == ResultCodes.OK){
+            DatabaseReference mdatabase= FirebaseDatabase.getInstance().getReference("Locations").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+            mdatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if(dataSnapshot.exists())
+                    {
+                        Intent intent = new Intent(MainActivity.this, ListOnline.class);
+                        intent.putExtra("Phonenum",FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
+                        startActivity(intent);
+                        finish();
+                        return;
+                    }
+                    else{
+
+                        Intent intent = new Intent(MainActivity.this, AddCarActivity.class);
+                        intent.putExtra("Phonenum",FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
+                        startActivity(intent);
+                        finish();
+                        return;
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+
+
+
+//                    Intent intent = new Intent(MainActivity.this,ListOnline.class);
+//                    startActivity(intent);
+//                    finish();
+//                    return;
+                }else{
+                    if(response == null)
+                    {
+                        Log.e("Login","Login Failed");
+                        return;
+                    }
+
+                }
+
+        }
+
+    }
+    private void startNewActivity(int resultCode, Intent data) {
+        if(resultCode == RESULT_OK)
+        {
+            Intent intent = new Intent(MainActivity.this,ListOnline.class);
+            startActivity(intent);
+            finish();
+        }
+        else
+        {
+            Toast.makeText(this, "Login Failed", Toast.LENGTH_SHORT).show();
+        }
     }
     private class HttpRequestTask extends AsyncTask<Void,Void, eTracking> {
 
@@ -65,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(eTracking eTracking) {
-            Toast.makeText(getApplicationContext(), eTracking.getName(), Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getApplicationContext(), eTracking.getName(), Toast.LENGTH_SHORT).show();
             super.onPostExecute(eTracking);
         }
 
@@ -126,8 +261,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result,
-                    Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(), result,
+//                    Toast.LENGTH_LONG).show();
         }
 
     }
@@ -190,8 +325,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result,
-                    Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(), result,
+//                    Toast.LENGTH_LONG).show();
         }
 
     }
@@ -243,10 +378,9 @@ public class MainActivity extends AppCompatActivity {
                         String date = c.getString("CreatedDate");
                         String name = c.getString("Name");
 
-
                        // Toast.makeText(MainActivity.this, imei+" "+name, Toast.LENGTH_SHORT).show();
-
                         // adding each child node to HashMap key => value
+
                         eTracking et = new eTracking(name,imei,date);
                         trackingList.add(et);
 

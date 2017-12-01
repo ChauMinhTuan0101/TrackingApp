@@ -5,14 +5,15 @@ package myapp.doan.tuanchau.vn.trackingapp;
  */
 
 public class User {
-    private String email,status;
+    private String email,status,phonenumber;
 
-    public User() {
-    }
-
-    public User(String email, String status) {
+    public User(String email, String status, String phonenumber) {
         this.email = email;
         this.status = status;
+        this.phonenumber = phonenumber;
+    }
+
+    public User() {
     }
 
     public String getEmail() {
@@ -29,5 +30,13 @@ public class User {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getPhonenumber() {
+        return phonenumber;
+    }
+
+    public void setPhonenumber(String phonenumber) {
+        this.phonenumber = phonenumber;
     }
 }

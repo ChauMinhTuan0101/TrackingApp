@@ -5,16 +5,17 @@ package myapp.doan.tuanchau.vn.trackingapp;
  */
 
 public class MapTracking {
-    private String email,uid,lat,lng;
+    private String email,uid,lat,lng,phonenumber;
 
-    public MapTracking() {
-    }
-
-    public MapTracking(String email, String uid, String lat, String lng) {
+    public MapTracking(String email, String uid, String lat, String lng, String phonenumber) {
         this.email = email;
         this.uid = uid;
         this.lat = lat;
         this.lng = lng;
+        this.phonenumber = phonenumber;
+    }
+
+    public MapTracking() {
     }
 
     public String getEmail() {
@@ -47,5 +48,13 @@ public class MapTracking {
 
     public void setLng(String lng) {
         this.lng = lng;
+    }
+
+    public String getPhonenumber() {
+        return phonenumber;
+    }
+
+    public void setPhonenumber(String phonenumber) {
+        this.phonenumber = phonenumber;
     }
 }

@@ -76,7 +76,9 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
     private static int DISTANCE =10;
     String lat,lng;
     String IMEI="";
-
+    String userID= "";
+    String carModel = "";
+    String DriverName = "";
     Date currentTime = Calendar.getInstance().getTime();
 
     @Override
@@ -124,6 +126,9 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         IMEI = telephonyManager.getDeviceId().toString();
 
+        Intent intent = getIntent();
+        carModel = intent.getStringExtra("CarModel");
+        DriverName = intent.getStringExtra("DriverName");
         handler = new Handler();
         m_handlerTask = new Runnable() {
             @Override
@@ -159,8 +164,10 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
                 .setValue(new MapTracking(FirebaseAuth.getInstance().getCurrentUser().getEmail(),
                         FirebaseAuth.getInstance().getCurrentUser().getUid(),
                         String.valueOf(mLastLocation.getLatitude()),
-                        String.valueOf(mLastLocation.getLongitude()
-                )));
+                        String.valueOf(mLastLocation.getLongitude()),
+                        FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()
+                        ));
+            userID = FirebaseAuth.getInstance().getCurrentUser().getUid();
         }
         else {
                 Toast.makeText(this, "Can't get Locaiton", Toast.LENGTH_SHORT).show();
@@ -213,25 +220,28 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
         ) {
             @Override
             protected void populateViewHolder(ListOnlineViewHolder viewHolder, final User model, int position) {
-               if(model.getEmail().equals(FirebaseAuth.getInstance().getCurrentUser().getEmail()))
-                   viewHolder.txtEmail.setText(model.getEmail()+ " (me)");
-               else
-                viewHolder.txtEmail.setText(model.getEmail());
-
+                if(model.getEmail() != null) {
+                    if (model.getEmail().equals(FirebaseAuth.getInstance().getCurrentUser().getEmail())) {
+                        viewHolder.txtEmail.setText(model.getPhonenumber() + " (me)");
+                    }
+                }
                viewHolder.itemClickListenener = new ItemClickListenener() {
                    @Override
                    public void onClick(View view, int position) {
                        //Toast.makeText(ListOnline.this, "Clicked", Toast.LENGTH_SHORT).show();
-                       if(!model.getEmail().equals(FirebaseAuth.getInstance().getCurrentUser().getEmail()))
+                       if(model.getPhonenumber().equals(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()) || model.getPhonenumber() != null)
                        {
                            Intent map  = new Intent(ListOnline.this,MapsActivity.class);
-                           map.putExtra("email", model.getEmail());
+                           map.putExtra("phone", model.getPhonenumber());
+                           map.putExtra("email","none");
                            map.putExtra("lat",mLastLocation.getLatitude());
                            map.putExtra("lng", mLastLocation.getLongitude());
+                           map.putExtra("uid",userID);
                            Log.d("s",String.valueOf(mLastLocation.getLatitude()));
-;                          startActivity(map);
+                           startActivity(map);
                        }
-                   }
+                       }
+
                };
 
             }
@@ -249,7 +259,7 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
                 {
                     currentUserRef.onDisconnect().removeValue();
                     counterRef.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                            .setValue(new User(FirebaseAuth.getInstance().getCurrentUser().getEmail(),"Online"));
+                            .setValue(new User(FirebaseAuth.getInstance().getCurrentUser().getEmail(),"Online",FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()));
                     adapter.notifyDataSetChanged();
                 }
             }
@@ -311,7 +321,7 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
         {
             case R.id.action_join:
                 currentUserRef.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                        .setValue(new User(FirebaseAuth.getInstance().getCurrentUser().getEmail(),"Online"));
+                        .setValue(new User(FirebaseAuth.getInstance().getCurrentUser().getEmail(),"Online",FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()));
                 break;
             case R.id.action_logout:
                 currentUserRef.removeValue();
@@ -441,8 +451,8 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
 
         @Override
         protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result,
-                    Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(), result,
+//                    Toast.LENGTH_LONG).show();
         }
 
     }
@@ -453,10 +463,12 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
             try {
                 URL url = new URL("http://trackingcar.us-west-2.elasticbeanstalk.com/api/AddTracking");
                 JSONObject postData = new JSONObject();
-                postData.put("IMEI", IMEI);
-                postData.put("CreatedDate",currentTime);
+                postData.put("PhoneNumber",FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
+                //postData.put("CreatedDate",currentTime);
+                postData.put("DriverName", DriverName);
                 postData.put("Latitude",lat);
                 postData.put("Longitude",lng);
+                postData.put("Name",carModel);
                 Log.e("params", postData.toString());
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(15000 /* milliseconds */);
@@ -505,10 +517,16 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
 
         @Override
         protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result,
-                    Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(), result,
+//                    Toast.LENGTH_LONG).show();
         }
 
+    }
+
+    @Override
+    protected void onPause() {
+        this.finish();
+        super.onPause();
     }
 
     public String getPostDataString(JSONObject params) throws Exception {
