@@ -437,7 +437,7 @@ public class MainActivity extends AppCompatActivity {
              * */
            for(eTracking item: trackingList)
            {
-               Toast.makeText(MainActivity.this, item.getName() + " " + item.getImei(), Toast.LENGTH_SHORT).show();
+              // Toast.makeText(MainActivity.this, item.getName() + " " + item.getImei(), Toast.LENGTH_SHORT).show();
            }
         }
 

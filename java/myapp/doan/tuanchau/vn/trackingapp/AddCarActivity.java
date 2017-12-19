@@ -143,7 +143,7 @@ public class AddCarActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String result) {
             Toast.makeText(getApplicationContext(), result,
-                    Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_LONG);
         }
 
     }

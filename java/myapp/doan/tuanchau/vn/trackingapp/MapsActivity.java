@@ -127,7 +127,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             email = getIntent().getStringExtra("email");
             lat = getIntent().getDoubleExtra("lat", 0);
             lng = getIntent().getDoubleExtra("lng", 0);
-            Toast.makeText(this, phone + lat.toString() + lng.toString(), Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, phone + lat.toString() + lng.toString(), Toast.LENGTH_SHORT).show();
 //            if(phone == "none" && email != "none")
 //            {
 //                loadLocationForThisUser(email);

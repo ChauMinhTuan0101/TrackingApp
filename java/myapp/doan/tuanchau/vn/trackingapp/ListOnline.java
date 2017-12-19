@@ -170,7 +170,7 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
             userID = FirebaseAuth.getInstance().getCurrentUser().getUid();
         }
         else {
-                Toast.makeText(this, "Can't get Locaiton", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "Can't get Locaiton", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -221,7 +221,7 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
             @Override
             protected void populateViewHolder(ListOnlineViewHolder viewHolder, final User model, int position) {
                 if(model.getEmail() != null) {
-                    if (model.getEmail().equals(FirebaseAuth.getInstance().getCurrentUser().getEmail())) {
+                    if (model.getPhonenumber().equals(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber())) {
                         viewHolder.txtEmail.setText(model.getPhonenumber() + " (me)");
                     }
                 }
