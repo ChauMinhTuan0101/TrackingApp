@@ -15,16 +15,6 @@
         android:layout_alignParentTop="true"
         tools:context=".MapsActivity" />
 
-    <Button
-        android:layout_width="300dp"
-        android:id="@+id/btnStart"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="41dp"
-        android:background="@drawable/buttoncurve"
-        android:text="STOP TRACKING" />
-
 
 </RelativeLayout>
 

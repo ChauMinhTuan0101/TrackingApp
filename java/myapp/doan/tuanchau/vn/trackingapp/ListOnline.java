@@ -204,7 +204,7 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
             }
             else
             {
-                Toast.makeText(this, "Not supported Device", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(this, "Not supported Device", Toast.LENGTH_SHORT).show();
                 return false;
             }
         }
@@ -220,18 +220,18 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
         ) {
             @Override
             protected void populateViewHolder(ListOnlineViewHolder viewHolder, final User model, int position) {
-                if(model.getEmail() != null) {
-                    if (model.getPhonenumber().equals(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber())) {
-                        viewHolder.txtEmail.setText(model.getPhonenumber() + " (me)");
-                    }
+                if (model.getPhonenumber().equals(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber())) {
+                        Log.e("A",model.getPhonenumber());
+                        viewHolder.txtEmail.setText(model.getPhonenumber().toString() + " (me)");
                 }
+                else viewHolder.txtEmail.setText(model.getPhonenumber());
                viewHolder.itemClickListenener = new ItemClickListenener() {
                    @Override
                    public void onClick(View view, int position) {
-                       //Toast.makeText(ListOnline.this, "Clicked", Toast.LENGTH_SHORT).show();
                        if(model.getPhonenumber().equals(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()) || model.getPhonenumber() != null)
                        {
                            Intent map  = new Intent(ListOnline.this,MapsActivity.class);
+                           Log.d("phone",model.getPhonenumber());
                            map.putExtra("phone", model.getPhonenumber());
                            map.putExtra("email","none");
                            map.putExtra("lat",mLastLocation.getLatitude());

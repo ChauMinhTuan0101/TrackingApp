@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         //btnEmail = findViewById(R.id.loginEmail);
         btnPhone = findViewById(R.id.loginPhone);
         trackingList  = new ArrayList<>();
-       // new GetTracking().execute();
+        // new GetTracking().execute();
 //        btnEmail.setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View view) {
@@ -92,20 +92,20 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
         //startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAllowNewEmailAccounts(true).build(),LOGIN_PERMISSION);
-       btnPhone.setOnClickListener(new View.OnClickListener() {
-           @Override
-           public void onClick(View view) {
-               FirebaseAuth auth = FirebaseAuth.getInstance();
+        btnPhone.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FirebaseAuth auth = FirebaseAuth.getInstance();
 //               if (auth.getCurrentUser() != null ) {
 ////                   Intent intent = new Intent(MainActivity.this,ListOnline.class);
 ////                   startActivity(intent);
 ////                   finish();
 //               } else {
-                   startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(Arrays.asList(
-                           new AuthUI.IdpConfig.Builder(AuthUI.PHONE_VERIFICATION_PROVIDER).build())).build(), RC_SIGN_IN);
-               //}
-           }
-       });
+                startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(Arrays.asList(
+                        new AuthUI.IdpConfig.Builder(AuthUI.PHONE_VERIFICATION_PROVIDER).build())).build(), RC_SIGN_IN);
+                //}
+            }
+        });
 
         //new AddCar().execute();
     }
@@ -121,33 +121,33 @@ public class MainActivity extends AppCompatActivity {
         {
             IdpResponse response = IdpResponse.fromResultIntent(data);
             if(resultCode == ResultCodes.OK){
-            DatabaseReference mdatabase= FirebaseDatabase.getInstance().getReference("Locations").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-            mdatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if(dataSnapshot.exists())
-                    {
-                        Intent intent = new Intent(MainActivity.this, ListOnline.class);
-                        intent.putExtra("Phonenum",FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
-                        startActivity(intent);
-                        finish();
-                        return;
+                DatabaseReference mdatabase= FirebaseDatabase.getInstance().getReference("Locations").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+                mdatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.exists())
+                        {
+                            Intent intent = new Intent(MainActivity.this, ListOnline.class);
+                            intent.putExtra("Phonenum",FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
+                            startActivity(intent);
+                            finish();
+                            return;
+                        }
+                        else{
+
+                            Intent intent = new Intent(MainActivity.this, AddCarActivity.class);
+                            intent.putExtra("Phonenum",FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
+                            startActivity(intent);
+                            finish();
+                            return;
+                        }
                     }
-                    else{
 
-                        Intent intent = new Intent(MainActivity.this, AddCarActivity.class);
-                        intent.putExtra("Phonenum",FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
-                        startActivity(intent);
-                        finish();
-                        return;
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
                     }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
+                });
 
 
 
@@ -156,14 +156,14 @@ public class MainActivity extends AppCompatActivity {
 //                    startActivity(intent);
 //                    finish();
 //                    return;
-                }else{
-                    if(response == null)
-                    {
-                        Log.e("Login","Login Failed");
-                        return;
-                    }
-
+            }else{
+                if(response == null)
+                {
+                    Log.e("Login","Login Failed");
+                    return;
                 }
+
+            }
 
         }
 
@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else
         {
-            Toast.makeText(this, "Login Failed", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "Login Failed", Toast.LENGTH_SHORT).show();
         }
     }
     private class HttpRequestTask extends AsyncTask<Void,Void, eTracking> {
@@ -378,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
                         String date = c.getString("CreatedDate");
                         String name = c.getString("Name");
 
-                       // Toast.makeText(MainActivity.this, imei+" "+name, Toast.LENGTH_SHORT).show();
+                        // Toast.makeText(MainActivity.this, imei+" "+name, Toast.LENGTH_SHORT).show();
                         // adding each child node to HashMap key => value
 
                         eTracking et = new eTracking(name,imei,date);
@@ -392,10 +392,10 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(getApplicationContext(),
-                                    "Json parsing error: " + e.getMessage(),
-                                    Toast.LENGTH_LONG)
-                                    .show();
+//                            Toast.makeText(getApplicationContext(),
+//                                    "Json parsing error: " + e.getMessage(),
+//                                    Toast.LENGTH_LONG)
+//                                    .show();
                         }
                     });
 
@@ -405,10 +405,10 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(getApplicationContext(),
-                                "Couldn't get json from server. Check LogCat for possible errors!",
-                                Toast.LENGTH_LONG)
-                                .show();
+//                        Toast.makeText(getApplicationContext(),
+//                                "Couldn't get json from server. Check LogCat for possible errors!",
+//                                Toast.LENGTH_LONG)
+//                                .show();
                     }
                 });
 
@@ -435,10 +435,10 @@ public class MainActivity extends AppCompatActivity {
             /**
              * Updating parsed JSON data into ListView
              * */
-           for(eTracking item: trackingList)
-           {
-              // Toast.makeText(MainActivity.this, item.getName() + " " + item.getImei(), Toast.LENGTH_SHORT).show();
-           }
+            for(eTracking item: trackingList)
+            {
+                // Toast.makeText(MainActivity.this, item.getName() + " " + item.getImei(), Toast.LENGTH_SHORT).show();
+            }
         }
 
     }

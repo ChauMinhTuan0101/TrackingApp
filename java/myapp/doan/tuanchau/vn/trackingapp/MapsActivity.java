@@ -3,6 +3,7 @@ package myapp.doan.tuanchau.vn.trackingapp;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.CursorIndexOutOfBoundsException;
 import android.location.Criteria;
@@ -21,6 +22,7 @@ import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -123,20 +125,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         locations  = FirebaseDatabase.getInstance().getReference("Locations");
 
         if(getIntent() != null) {
-            phone = getIntent().getStringExtra("phonenum");
+            phone = getIntent().getStringExtra("phone");
             email = getIntent().getStringExtra("email");
             lat = getIntent().getDoubleExtra("lat", 0);
             lng = getIntent().getDoubleExtra("lng", 0);
-           // Toast.makeText(this, phone + lat.toString() + lng.toString(), Toast.LENGTH_SHORT).show();
+            // Toast.makeText(this, phone + lat.toString() + lng.toString(), Toast.LENGTH_SHORT).show();
 //            if(phone == "none" && email != "none")
 //            {
 //                loadLocationForThisUser(email);
 //            }
 //            else if(phone != "none" && email == "none"){
 
-                loadLocationForThisUser(phone);
+            loadLocationForThisUser(phone);
 
-        //}
+            //}
         }
 
         new AddTracking().execute();
@@ -194,7 +196,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void loadLocationForThisUser(String phonenum) {
-        Query user_location = locations.orderByChild("phonenumber").equalTo(email);
+        Query user_location = locations.orderByChild("phonenumber").equalTo(phonenum);
         user_location.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -211,7 +213,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     friend.setLatitude(Double.parseDouble(tracking.getLat()));
                     friend.setLongitude(Double.parseDouble(tracking.getLng()));
                     distance(to,friend);
-
+                    //Log.d("Friend ")
                     mMap.addMarker(new MarkerOptions().position(friendLocation).title(tracking.getPhonenumber())
                             .snippet("Distance" + new DecimalFormat("#.#").format(distance(to,friend)))
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
@@ -219,10 +221,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                 }
-                //tracking.getLat() + tracking.getLng()
-//                Toast.makeText(MapsActivity.this, tracking.getPhonenumber() , Toast.LENGTH_SHORT).show();
 
                 LatLng current = new LatLng(lat,lng);
+                String a = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+                Log.e("AA",a);
                 mMap.addMarker(new MarkerOptions().position(current)
                         .title(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()));
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng),12.0f));
@@ -237,6 +239,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(MapsActivity.this,ListOnline.class));
+        return;
     }
 
     private double distance(Location currentUser, Location friend) {

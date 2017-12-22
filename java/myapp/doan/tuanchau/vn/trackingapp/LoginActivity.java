@@ -118,7 +118,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
         else
         {
-            Toast.makeText(this, "Login Failed", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "Login Failed", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -375,4 +375,3 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 }
-
